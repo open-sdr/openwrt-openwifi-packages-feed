@@ -2,6 +2,7 @@ include $(TOPDIR)/rules.mk
  
 PKG_NAME:=webfsd
 PKG_VERSION:=1.21
+PKG_HASH:=869a033e8e4277952da32c09090fc25b7a0028ea8ebe09a0ce75c93d500f526a
 PKG_RELEASE:=1
  
 PKG_SOURCE_URL:=https://github.com/ourway/webfsd.git
