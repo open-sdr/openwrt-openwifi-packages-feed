@@ -48,6 +48,10 @@ HOST_CONFIGURE_ARGS = \
 	--localstatedir=$(MB_BUILD_PREFIX)/var \
 	--sbindir=$(MB_BUILD_PREFIX)/bin
 
+define Build/Configure
+	:
+endef
+
 define Build/Compile
 	mkdir -p $(MB_BUILD_PREFIX)
 	$(call Host/Configure/Default, \
@@ -58,9 +62,9 @@ define Build/Compile
 	--disable-multilib \
 	--disable-werror \
 	--program-prefix=$(TARGET)- \
-	,,src/$(PKG_BINUTILS))
-	$(call Host/Compile/Default,,src/$(PKG_BINUTILS))
-	$(call Host/Compile/Default,install,src/$(PKG_BINUTILS))
+	,,)
+	$(call Host/Compile/Default,,)
+	$(call Host/Compile/Default,install,)
 endef
 
 define Build/Clean
