@@ -14,8 +14,7 @@ include $(INCLUDE_DIR)/package.mk
 
 OPENWIFI_BRANCH:=thesis
 OPENWIFI_REVISION:=5c5d825d # Latest known working commit
-OPENWIFI_GITHUB_REPO:= \
-https://username:password@development.tymeli.be/robbegaeremynck/openwifi.git
+OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
 
 # Link to the repository that hosts all board bitstreams
 OPENWIFI_HW_REVISION:=91c68d6
@@ -27,7 +26,7 @@ OPENWIFI_DIR:=$(PKG_BUILD_DIR)/$(PKG_NAME)
 DRIVER_DIR:=$(OPENWIFI_DIR)/driver
 
 # Directory to the adi_non-mainline_common dependency
-ADI_VERSION:=thesis
+ADI_VERSION:=adi-5.15
 ADI_NAME:=adi_non-mainline_common
 ADI_NON-MAINLINE_DIR:=$(BUILD_DIR)/$(ADI_NAME)-$(ADI_VERSION)
 
@@ -37,6 +36,12 @@ incl_fix_path:=$(ADI_NON-MAINLINE_DIR)/drivers/include_fix
 define KernelPackage/openwifi
 	SUBMENU:=Wireless Drivers
 	TITLE:=Driver for openwifi
+	KCONFIG:= \
+		CONFIG_OF_OVERLAY=y \
+		CONFIG_CONFIGFS_FS=y \
+		CONFIG_OF_FPGA_REGION=y \
+		CONFIG_FPGA_MGR_ZYNQ_FPGA=y \
+		CONFIG_FPGA_MGR_ZYNQMP_FPGA=y
 	DEPENDS:= \
 		@TARGET_zynq \
 		+kmod-mac80211 \
@@ -159,6 +164,9 @@ define Build/Prepare
 	cd $(PKG_BUILD_DIR)/openwifi-hw-img && \
 	git checkout $(OPENWIFI_HW_REVISION)
 
+	# Unzip system_top.xsa
+	cd $(BOARD_DIR) && unzip -o $(XSA_PATH)
+
 	mkdir -p $(incl_fix_path)
 	touch $(DRIVER_DIR)/pre_def.h
 	cd $(DRIVER_DIR) && \
@@ -227,9 +235,11 @@ endef
 
 # Install the uEnv to auto load the bitstream + OS
 OPENWRT_BOARD_NAME:=$(lastword $(subst -, ,$(PROFILE)))
-ifeq ($(OPENWRT_BOARD_NAME),adrv9361)
-	OPENWIFI_BOARD_NAME:=adrv9361z7035
-endif
+# Mapping table
+OPENWIFI_BOARD_NAME_adrv9361 := adrv9361z7035
+OPENWIFI_BOARD_NAME_antsdre200 := antsdr_e200
+# Expand
+OPENWIFI_BOARD_NAME:= $(OPENWIFI_BOARD_NAME_$(OPENWRT_BOARD_NAME))
 
 BOARD_DIR:=$(PKG_BUILD_DIR)/openwifi-hw-img/boards/$(OPENWIFI_BOARD_NAME)/sdk
 XSA_PATH:=$(BOARD_DIR)/system_top.xsa
@@ -238,17 +248,20 @@ ifdef !CONFIG_OPENWIFI_DEFAULT_BITSTREAM
 	BITSTREAM_PATH:=OPENWIFI_BITSTREAM_FILE
 endif
 
+# Copy openwifi bitstream to staging dir
+# Modify bootcmd to openwifi its will
 BUILD_DEVICE:=$(subst DEVICE_,,$(PROFILE))
 define Build/InstallDev
-	$(CP) -f ./files/uEnv-openwifi.txt $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-uEnv.txt
-	cd $(BOARD_DIR) && unzip -o $(XSA_PATH)
 	$(CP) -f $(BITSTREAM_PATH) $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-system_top.bit
+
+	sed -i 's/boot//g' $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd
+	cat ./files/boot.cmd >> $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd
 endef
 
 # Copy the openwifi sources to the board
 # Since user_space scripts necessary to play with the sdr
 define KernelPackage/openwifi/install
-	$(CP) $(OPENWIFI_DIR) $(1)/openwifi
+	$(CP) $(OPENWIFI_DIR) $(1)
 	$(INSTALL_DATA) ./files/mime.types $(1)/openwifi/user_space/webserver
 
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -256,6 +269,9 @@ define KernelPackage/openwifi/install
 
 	$(INSTALL_DIR) $(1)/etc/board.d
 	$(INSTALL_DATA) ./files/openwifi_board $(1)/etc/board.d/01_openwifi
+
+	$(INSTALL_DIR) $(1)/lib/firmware
+	$(INSTALL_DATA) $(BITSTREAM_PATH) $(1)/lib/firmware/openwifi_bitstream.bit
 endef
 
 define Package/sdrctl/install
