@@ -93,6 +93,7 @@ endef
 define KernelPackage/openwifi/config
 	select PACKAGE_CFG80211_TESTMODE
 	select ZYNQ_BITSTREAM_BOOTFS
+	select HAS_OVERLAYS_BOOTFS
 	if PACKAGE_kmod-openwifi
 		menu "OpenWiFi user space programs"
 			config PACKAGE_side_ch_ctl
@@ -256,6 +257,9 @@ endif
 BUILD_DEVICE:=$(subst DEVICE_,,$(PROFILE))
 define Build/InstallDev
 	$(CP) -f $(BITSTREAM_PATH) $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-system_top.bit
+
+	mkdir -p $(STAGING_DIR_IMAGE)/overlays
+	touch $(STAGING_DIR_IMAGE)/overlays/overlay.dtbo
 
 	if [ ! -f .patched_bootcmd ]; then \
 	tac $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd | sed '0,/boot/s/boot//' | tac > tmpfile && mv tmpfile $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd \
