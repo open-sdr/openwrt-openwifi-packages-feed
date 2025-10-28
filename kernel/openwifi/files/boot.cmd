@@ -1,15 +1,21 @@
-setenv devtype mmc
-setenv bootpart 0:1
-
+# Program openwifi bitstream
 setenv bit_file openwifi_bitstream.bit
-setenv bit_loadaddr 0x2000000
+setenv bit_loadaddr 0x03000000
+setenv program_openwifi_bitstream "load ${devtype} ${bootpart} ${bit_loadaddr} ${bit_file};fpga loadb 0 ${bit_loadaddr} ${filesize}"
+run program_openwifi_bitstream
 
-setenv kernel_file fit.itb
-setenv kernel_loadaddr 0x1000000
+# Extract default device_tree
+load ${devtype} ${bootpart} 0x04000000 fit.itb
+bootm start 0x04000000
 
-setenv bootargs "console=ttyPS0,115200n8 root=/dev/mmcblk0p2 rootwait earlyprintk"
+# Tweaking device tree
+fdt addr ${fdtaddr} # Redundant, should be already done by bootm start
+load ${devtype} ${bootpart} 0x1000000 ${openwifi_overlay_filename}
+fdt resize ${filesize}
+fdt apply 0x1000000
+load ${devtype} ${bootpart} 0x2000000 ${openwifi_board_overlay_filename}
+fdt resize ${filesize}
+fdt apply 0x2000000
 
-load ${devtype} ${bootpart} ${bit_loadaddr} ${bit_file}
-fpga loadb 0 ${bit_loadaddr} ${filesize}
-load ${devtype} ${bootpart} ${kernel_loadaddr} ${kernel_file}
-bootm ${kernel_loadaddr}
+# Start kernel with tweaked device tree
+bootm 0x04000000 - ${fdtaddr}
