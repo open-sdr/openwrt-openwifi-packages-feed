@@ -25,6 +25,9 @@ OPENWIFI_DIR:=$(PKG_BUILD_DIR)/$(PKG_NAME)
 # Openwifi driver path
 DRIVER_DIR:=$(OPENWIFI_DIR)/driver
 
+# Device tree directory
+DT_DIR:=$(OPENWIFI_DIR)/kernel_boot/boards
+
 # Directory to the adi_non-mainline_common dependency
 ADI_VERSION:=adi-5.15
 ADI_NAME:=adi_non-mainline_common
@@ -255,7 +258,9 @@ define Build/InstallDev
 	$(CP) -f $(BITSTREAM_PATH) $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-system_top.bit
 
 	sed -i 's/boot//g' $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd
-	cat ./files/boot.cmd >> $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd
+	sed -e 's/[openwifi_overlay_filename]/openwifi.dtbo/g' \
+		-e 's/[openwifi_board_overlay_filename]/openwifi_board.dtbo/g' \
+		./files/boot.cmd >> $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd
 endef
 
 # Copy the openwifi sources to the board
