@@ -261,13 +261,13 @@ define Build/InstallDev
 	mkdir -p $(STAGING_DIR_IMAGE)/overlays
 	touch $(STAGING_DIR_IMAGE)/overlays/overlay.dtbo
 
-	if [ ! -f .patched_bootcmd ]; then \
+	if [ ! -f $(STAGING_DIR_IMAGE)/.patched_bootcmd ]; then \
 	tac $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd | sed '0,/boot/s/boot//' | tac > tmpfile && mv tmpfile $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd \
 	&& sed -e 's/openwifi_overlay_filename/openwifi.dtbo/g' \
 		-e 's/openwifi_board_overlay_filename/openwifi_board.dtbo/g' \
 		./files/boot.cmd >> $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd \
 	; fi
-	touch .patched_bootcmd
+	touch $(STAGING_DIR_IMAGE)/.patched_bootcmd
 endef
 
 # Copy the openwifi sources to the board
