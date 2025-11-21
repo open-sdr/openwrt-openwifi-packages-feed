@@ -137,14 +137,16 @@ endef
 CT_MAKEDEFS:=
 
 # Include preprocessor definitions
-BPV := 5.15.92-1
 NOSTDINC_FLAGS := \
+	$(KERNEL_NOSTDINC_FLAGS) \
 	-I$(incl_fix_path) \
-	-I$(KERNEL_BUILD_DIR)/backports-$(BPV)/include \
-	-include$(KERNEL_BUILD_DIR)/backports-$(BPV)/backport-include/linux/version.h \
-	-include$(KERNEL_BUILD_DIR)/backports-$(BPV)/backport-include/linux/string.h \
-	-include$(LINUX_DIR)/include/generated/autoconf.h \
-	-include$(LINUX_DIR)/include/linux/kconfig.h \
+	-I$(PKG_BUILD_DIR) \
+	-I$(STAGING_DIR)/usr/include/mac80211-backport/uapi \
+	-I$(STAGING_DIR)/usr/include/mac80211-backport \
+	-I$(STAGING_DIR)/usr/include/mac80211/uapi \
+	-I$(STAGING_DIR)/usr/include/mac80211 \
+	-include backport/autoconf.h \
+	-include backport/backport.h \
 	-include$(LINUX_DIR)/include/net/sock.h \
 	-DCPTCFG_NL80211_TESTMODE
 
@@ -157,10 +159,12 @@ FOSDEM_VIDEO_URL:= \
 https://github.com/open-sdr/openwifi-hw-img/raw/master/openwifi-low-aac.mp4
 
 define Build/Prepare
+#	cd $(PKG_BUILD_DIR) && \
+#	git clone --branch $(OPENWIFI_BRANCH) $(OPENWIFI_GITHUB_REPO) $(PKG_NAME)
+#	cd $(OPENWIFI_DIR) && \
+#    git checkout $(OPENWIFI_REVISION)
 	cd $(PKG_BUILD_DIR) && \
-	git clone --branch $(OPENWIFI_BRANCH) $(OPENWIFI_GITHUB_REPO) $(PKG_NAME)
-	cd $(OPENWIFI_DIR) && \
-    git checkout $(OPENWIFI_REVISION)
+	$(CP) /openwifi $(PKG_NAME)
 
 	# Clone the openwifi-hw-img repository to automatically provide all bitstreams
 	cd $(PKG_BUILD_DIR) && \
@@ -190,18 +194,17 @@ KBUILD_EXTRA_SYMBOLS:= \
 	$(KERNEL_BUILD_DIR)/symvers/adi_non-mainline_common.symvers
 
 FLAGS := \
-	CROSS_COMPILE=$(TARGET_CROSS) ARCH=$(ARCH) \
 	KBUILD_EXTRA_SYMBOLS="$(KBUILD_EXTRA_SYMBOLS)" \
 	NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)"
 
 define Build/Compile/sdr
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)/openofdm_tx" $(FLAGS) modules
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)/openofdm_rx" $(FLAGS) modules
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)/tx_intf" $(FLAGS) modules
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)/rx_intf" $(FLAGS) modules
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)/xpu" $(FLAGS) modules
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)/side_ch" $(FLAGS) modules
-	+$(MAKE) -C $(LINUX_DIR) M="$(DRIVER_DIR)" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/openofdm_tx" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/openofdm_rx" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/tx_intf" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/rx_intf" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/xpu" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/side_ch" $(FLAGS) modules
+	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)" $(FLAGS) modules
 	cp -f $(DRIVER_DIR)/Module.symvers $(PKG_BUILD_DIR)/Module.symvers
 endef
 
@@ -241,6 +244,7 @@ endef
 OPENWRT_BOARD_NAME:=$(lastword $(subst -, ,$(PROFILE)))
 # Mapping table
 OPENWIFI_BOARD_NAME_adrv9361 := adrv9361z7035
+OPENWIFI_BOARD_NAME_adrv9364 := adrv9364z7020
 OPENWIFI_BOARD_NAME_antsdre200 := antsdr_e200
 # Expand
 OPENWIFI_BOARD_NAME:= $(OPENWIFI_BOARD_NAME_$(OPENWRT_BOARD_NAME))
@@ -252,6 +256,12 @@ ifdef !CONFIG_OPENWIFI_DEFAULT_BITSTREAM
 	BITSTREAM_PATH:=OPENWIFI_BITSTREAM_FILE
 endif
 
+# Generate overlays, as we do not require the full device tree, only board name required
+define Build/GenerateOverlays
+	cd $(DT_DIR) && \
+	./construct_device_tree.sh $(OPENWIFI_BOARD_NAME)
+endef
+
 # Copy openwifi bitstream to staging dir
 # Modify bootcmd to openwifi its will
 BUILD_DEVICE:=$(subst DEVICE_,,$(PROFILE))
@@ -259,7 +269,9 @@ define Build/InstallDev
 	$(CP) -f $(BITSTREAM_PATH) $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-system_top.bit
 
 	mkdir -p $(STAGING_DIR_IMAGE)/overlays
-	touch $(STAGING_DIR_IMAGE)/overlays/overlay.dtbo
+	$(call Build/GenerateOverlays)
+	$(CP) $(DT_DIR)/openwifi.dtbo $(STAGING_DIR_IMAGE)/overlays/openwifi.dtbo
+	$(CP) $(DT_DIR)/$(OPENWIFI_BOARD_NAME)/$(OPENWIFI_BOARD_NAME).dtbo $(STAGING_DIR_IMAGE)/overlays/openwifi_board.dtbo
 
 	if [ ! -f $(STAGING_DIR_IMAGE)/.patched_bootcmd ]; then \
 	tac $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd | sed '0,/boot/s/boot//' | tac > tmpfile && mv tmpfile $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd \
@@ -274,6 +286,7 @@ endef
 # Since user_space scripts necessary to play with the sdr
 define KernelPackage/openwifi/install
 	$(CP) $(OPENWIFI_DIR) $(1)
+	rm -rf $(1)/openwifi/cmake-build-debug
 	$(INSTALL_DATA) ./files/mime.types $(1)/openwifi/user_space/webserver
 
 	$(INSTALL_DIR) $(1)/etc/init.d
