@@ -29,9 +29,8 @@ DRIVER_DIR:=$(OPENWIFI_DIR)/driver
 DT_DIR:=$(OPENWIFI_DIR)/kernel_boot/boards
 
 # Directory to the adi_non-mainline_common dependency
-ADI_VERSION:=adi-5.15
 ADI_NAME:=adi_non-mainline_common
-ADI_NON-MAINLINE_DIR:=$(BUILD_DIR)/$(ADI_NAME)-$(ADI_VERSION)
+ADI_NON-MAINLINE_DIR:=$(STAGING_DIR)/$(ADI_NAME)
 
 # incl_fix_path fixes the include structure that is different
 incl_fix_path:=$(ADI_NON-MAINLINE_DIR)/drivers/include_fix
