@@ -15,14 +15,14 @@ cp.b ${fdtaddr} ${fdt_copy_addr} ${filesize}
 fdt addr ${fdt_copy_addr}
 
 # Apply common openwifi hardware
-load ${devtype} ${bootpart} 0x1000000 overlays/openwifi_overlay_filename
+load ${devtype} ${bootpart} 0x01000000 overlays/openwifi_overlay_filename
 fdt resize ${filesize}
-fdt apply 0x1000000
+fdt apply 0x01000000
 
 # Apply openwifi board specific hardware
-load ${devtype} ${bootpart} 0x2000000 overlays/openwifi_board_overlay_filename
+load ${devtype} ${bootpart} 0x02000000 overlays/openwifi_board_overlay_filename
 fdt resize ${filesize}
-fdt apply 0x2000000
+fdt apply 0x02000000
 
 # Start kernel with tweaked device tree
 bootm 0x04000000 - ${fdt_copy_addr}
