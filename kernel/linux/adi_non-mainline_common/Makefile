@@ -5,8 +5,8 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://github.com/analogdevicesinc/linux.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=adi-5.15.0
-PKG_MIRROR_HASH:=60630cb1fff920000e950df55200a5713db843548e2aeb620b4750b6fc0c344a
+PKG_SOURCE_VERSION:=adi-6.6.0
+PKG_HASH:=df45891e95e99e81026772013812efca0161c51f4784f998b68038bd70beb3dd
 
 PKG_MAINTAINER:=Robbe Gaeremynck <robbe.gaeremynck@outlook.com>
 
@@ -41,6 +41,9 @@ define Build/Configure
 	cp -f $(ADI_DIR)/include/linux/iio/buffer-dmaengine.h \
 	$(LINUX_DIR)/include/linux/iio/buffer-dmaengine.h
 
+	cp -f $(ADI_DIR)/include/linux/dmaengine.h \
+	$(LINUX_DIR)/include/linux/dmaengine.h
+
 	mkdir -p $(LINUX_DIR)/include/dt-bindings/jesd204
 	cp -f $(ADI_DIR)/include/dt-bindings/jesd204/device-states.h \
 	$(LINUX_DIR)/include/dt-bindings/jesd204/device-states.h
@@ -62,6 +65,8 @@ define Build/Configure
 	$(LINUX_DIR)/drivers/iio/iio_core.h
 
 	mkdir -p $(LINUX_DIR)/include/uapi/linux/iio
+	cp -f $(ADI_DIR)/include/uapi/linux/iio/buffer.h \
+	$(LINUX_DIR)/include/uapi/linux/iio/buffer.h
 	cp -f $(ADI_DIR)/include/uapi/linux/iio/types.h \
 	$(LINUX_DIR)/include/uapi/linux/iio/types.h
 endef
@@ -87,13 +92,15 @@ adi-$(CONFIG_PACKAGE_kmod-ad9361)+= CONFIG_AD9361=m
 NOSTDINC_FLAGS-$(CONFIG_PACKAGE_kmod-ad9361)+=-DCONFIG_CF_AXI_ADC
 
 # If OpenWiFi will be build, patches should be applied
-define Build/ad9361/Prepare
-	cd $(ADI_DIR) && \
-	wget $(OPENWIFI_GITHUB_URL)/kernel_boot/ad9361.patch && \
-	wget $(OPENWIFI_GITHUB_URL)/kernel_boot/ad9361_conv.patch && \
-	git apply ad9361.patch && \
-	git apply ad9361_conv.patch
-endef
+#define Build/ad9361/Prepare
+#	cd $(ADI_DIR)/ && \
+#	wget $(OPENWIFI_GITHUB_URL)/kernel_boot/ad9361.patch && \
+#	wget $(OPENWIFI_GITHUB_URL)/kernel_boot/ad9361_conv.patch
+#
+#	cd $(ADI_DIR)/ && ls && \
+#	git apply ad9361.patch && \
+#	git apply ad9361_conv.patch
+#endef
 
 #
 #	CF_AXI_ADC driver
@@ -127,6 +134,11 @@ define Build/Compile
 	NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" modules
 	+$(KERNEL_MAKE) $(CT_MAKEDEFS) M=$(ADI_DIR)/$(iio_frequency_subdir) \
 	NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" modules
+endef
+
+# Make sources available to other packages
+define Build/InstallDev
+	$(LN) $(PKG_BUILD_DIR) $(1)/$(PKG_NAME)
 endef
 
 $(eval $(call KernelPackage,ad9361))
