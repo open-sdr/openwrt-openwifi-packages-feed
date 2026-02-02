@@ -45,7 +45,6 @@ define KernelPackage/openwifi
 		CONFIG_FPGA_MGR_ZYNQ_FPGA=y \
 		CONFIG_FPGA_MGR_ZYNQMP_FPGA=y
 	DEPENDS:= \
-		@TARGET_zynq \
 		+kmod-mac80211 \
 		+kmod-ad9361 \
 		+kmod-cf_axi_dds \
@@ -91,8 +90,9 @@ endef
 
 define KernelPackage/openwifi/config
 	select PACKAGE_CFG80211_TESTMODE
-	select ZYNQ_BITSTREAM_BOOTFS
 	select HAS_OVERLAYS_BOOTFS
+	select ZYNQ_BITSTREAM_BOOTFS
+	select ZYNQMP_BITSTREAM_BOOTFS
 	if PACKAGE_kmod-openwifi
 		menu "OpenWiFi user space programs"
 			config PACKAGE_side_ch_ctl
@@ -245,6 +245,15 @@ OPENWRT_BOARD_NAME:=$(lastword $(subst -, ,$(PROFILE)))
 OPENWIFI_BOARD_NAME_adrv9361 := adrv9361z7035
 OPENWIFI_BOARD_NAME_adrv9364 := adrv9364z7020
 OPENWIFI_BOARD_NAME_antsdre200 := antsdr_e200
+OPENWIFI_BOARD_NAME_antsdre310 := antsdr
+OPENWIFI_BOARD_NAME_antsdre310v2 := e310v2
+OPENWIFI_BOARD_NAME_zed := zed_fmcs2
+OPENWIFI_BOARD_NAME_zc702 := zc702_fmcs2
+OPENWIFI_BOARD_NAME_zc706 := zc706_fmcs2
+OPENWIFI_BOARD_NAME_sdrpi := sdrpi
+OPENWIFI_BOARD_NAME_neptunesdr := neptunesdr
+OPENWIFI_BOARD_NAME_zcu102 := zcu102_fmcs2
+OPENWIFI_BOARD_NAME_ := $(PROFILE)
 # Expand
 OPENWIFI_BOARD_NAME:= $(OPENWIFI_BOARD_NAME_$(OPENWRT_BOARD_NAME))
 
@@ -258,7 +267,7 @@ endif
 # Generate overlays, as we do not require the full device tree, only board name required
 define Build/GenerateOverlays
 	cd $(DT_DIR) && \
-	./construct_device_tree.sh $(OPENWIFI_BOARD_NAME)
+	./construct_device_tree.sh $(OPENWIFI_BOARD_NAME) $(if $(filter zcu102,$(OPENWRT_BOARD_NAME)),64,32)
 endef
 
 # Copy openwifi bitstream to staging dir
