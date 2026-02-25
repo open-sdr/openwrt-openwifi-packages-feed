@@ -41,9 +41,6 @@ define Build/Configure
 	cp -f $(ADI_DIR)/include/linux/iio/buffer-dmaengine.h \
 	$(LINUX_DIR)/include/linux/iio/buffer-dmaengine.h
 
-	cp -f $(ADI_DIR)/include/linux/dmaengine.h \
-	$(LINUX_DIR)/include/linux/dmaengine.h
-
 	mkdir -p $(LINUX_DIR)/include/dt-bindings/jesd204
 	cp -f $(ADI_DIR)/include/dt-bindings/jesd204/device-states.h \
 	$(LINUX_DIR)/include/dt-bindings/jesd204/device-states.h
