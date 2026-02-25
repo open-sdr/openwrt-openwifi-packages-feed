@@ -1,13 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=binutils
-PKG_RELEASE:=1
+PKG_VERSION:=2.45
 
 PKG_MAINTAINER:=Robbe Gaeremynck <robbe.gaeremynck@outlook.com>
 
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.zst
 PKG_SOURCE_URL:=https://ftp.belnet.be/mirrors/ftp.gnu.org/gnu/$(PKG_NAME)
-PKG_SOURCE_VERSION:=2.45
-PKG_HASH:=c50c0e7f9cb188980e2cc97e4537626b1672441815587f1eab69d2a1bfbef5d2
+PKG_HASH:=7f288c9a869582d53dc645bf1b9e90cc5123f6862738850472ddbca69def47a3
 
 include $(INCLUDE_DIR)/host-build.mk
 PKG_BUILD_DIR:=$(HOST_BUILD_DIR)
