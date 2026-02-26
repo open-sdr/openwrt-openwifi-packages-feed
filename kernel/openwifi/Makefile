@@ -294,10 +294,12 @@ endef
 
 # Copy the openwifi sources to the board
 # Since user_space scripts necessary to play with the sdr
+OPENWIFI_BOARD_DIR=/root/openwifi
 define KernelPackage/openwifi/install
-	$(CP) $(OPENWIFI_DIR) $(1)
-	rm -rf $(1)/openwifi/cmake-build-debug
-	$(INSTALL_DATA) ./files/mime.types $(1)/openwifi/user_space/webserver
+	$(INSTALL_DIR) $(1)$(OPENWIFI_BOARD_DIR)
+	$(CP) $(OPENWIFI_DIR)/user_space/* $(1)$(OPENWIFI_BOARD_DIR)
+
+	$(INSTALL_DATA) ./files/mime.types $(1)$(OPENWIFI_BOARD_DIR)/webserver
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/openwifi_service $(1)/etc/init.d/openwifi
@@ -305,8 +307,9 @@ define KernelPackage/openwifi/install
 	$(INSTALL_DIR) $(1)/etc/board.d
 	$(INSTALL_DATA) ./files/openwifi_board $(1)/etc/board.d/01_openwifi
 
-	$(INSTALL_DIR) $(1)/lib/firmware
-	$(INSTALL_DATA) $(BITSTREAM_PATH) $(1)/lib/firmware/openwifi_bitstream.bit
+#	FPGA loading from Linux userspace not yet supported, requires Xilinx kernel (or preferred method is patch for OpenWrt)
+#	$(INSTALL_DIR) $(1)/lib/firmware
+#	$(INSTALL_DATA) $(BITSTREAM_PATH) $(1)/lib/firmware/openwifi_bitstream.bit
 endef
 
 define Package/sdrctl/install

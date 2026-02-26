@@ -2,10 +2,10 @@
 
 START=19
 
-OPENWIFI_DIR=/openwifi
+OPENWIFI_DIR=/root/openwifi
 boot() {
 	echo "OPENWIFI SERVICE BOOT"
-	cd $OPENWIFI_DIR/user_space
+	cd $OPENWIFI_DIR
 	sh wgd.sh
 	echo "OPENWIFI DONE LOADING"
 }
