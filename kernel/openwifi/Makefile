@@ -12,8 +12,8 @@ PKG_BUILD_PARALLEL:=1
 include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
-OPENWIFI_BRANCH:=thesis
-OPENWIFI_REVISION:=5c5d825d # Latest known working commit
+OPENWIFI_BRANCH:=nlnet
+OPENWIFI_REVISION:=d1ecd9bfb8abbb63bf9fe2251381baa8d6f81817 # Latest known working commit
 OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
 
 # Link to the repository that hosts all board bitstreams
@@ -160,12 +160,11 @@ FOSDEM_VIDEO_URL:= \
 https://github.com/open-sdr/openwifi-hw-img/raw/master/openwifi-low-aac.mp4
 
 define Build/Prepare
-#	cd $(PKG_BUILD_DIR) && \
-#	git clone --branch $(OPENWIFI_BRANCH) $(OPENWIFI_GITHUB_REPO) $(PKG_NAME)
-#	cd $(OPENWIFI_DIR) && \
-#    git checkout $(OPENWIFI_REVISION)
+	# Clone the openwifi repository
 	cd $(PKG_BUILD_DIR) && \
-	$(CP) /openwifi $(PKG_NAME)
+	git clone --branch $(OPENWIFI_BRANCH) $(OPENWIFI_GITHUB_REPO) $(PKG_NAME)
+	cd $(OPENWIFI_DIR) && \
+	git checkout $(OPENWIFI_REVISION)
 
 	# Clone the openwifi-hw-img repository to automatically provide all bitstreams
 	cd $(PKG_BUILD_DIR) && \
