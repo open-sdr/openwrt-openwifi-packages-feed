@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
 OPENWIFI_BRANCH:=nlnet
-OPENWIFI_REVISION:=d1ecd9bfb8abbb63bf9fe2251381baa8d6f81817 # Latest known working commit
+OPENWIFI_REVISION:=d1ecd9bf # Latest known working commit (must be length eight)
 OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
 
 # Link to the repository that hosts all board bitstreams
