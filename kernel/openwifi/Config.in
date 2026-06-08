@@ -1,0 +1,61 @@
+config OPENWIFI_BOARD_NAME
+	string
+	depends on PACKAGE_kmod-openwifi
+	default "zed_fmcs2"     if TARGET_zynq_generic_DEVICE_avnet_zynq-zed
+	default "zc702_fmcs2"   if TARGET_zynq_generic_DEVICE_xlnx_zynq-zc702
+	default "zc706_fmcs2"   if TARGET_zynq_generic_DEVICE_xlnx_zynq-zc706
+	default "adrv9361z7035" if TARGET_zynq_generic_DEVICE_analog_devices_zynq-adrv9361
+	default "adrv9364z7020" if TARGET_zynq_generic_DEVICE_analog_devices_zynq-adrv9364
+	default "antsdr_e200"   if TARGET_zynq_generic_DEVICE_microphase_zynq-antsdre200
+	default "antsdr"        if TARGET_zynq_generic_DEVICE_microphase_zynq-antsdre310
+	default "e310v2"        if TARGET_zynq_generic_DEVICE_microphase_zynq-antsdre310v2
+	default "sdrpi"         if TARGET_zynq_generic_DEVICE_hexsdr_sdrpi
+	default "neptunesdr"    if TARGET_zynq_generic_DEVICE_hamgeek_neptunesdr
+	default "zcu102_fmcs2"  if TARGET_zynqmp_generic_DEVICE_xlnx_zynqmp-zcu102
+	default ""
+
+menu "OpenWiFi user space programs"
+	depends on PACKAGE_kmod-openwifi
+
+	config PACKAGE_side_ch_ctl
+		bool "side_ch_ctl tool for OpenWiFi"
+		default y
+
+	config PACKAGE_inject_80211
+		bool "inject_80211 tool for OpenWiFi"
+		default y
+
+	config PACKAGE_sdrctl
+		bool "sdrctl tool for OpenWiFi"
+		default y
+endmenu
+
+config PACKAGE_luci
+	bool "(recommended) Use LuCi web interface"
+	depends on PACKAGE_kmod-openwifi
+	default y
+
+config OPENWIFI_DEFAULT_DTS
+	bool "Let OpenWiFi choose the DTS file"
+	depends on PACKAGE_kmod-openwifi
+	default y
+
+config OPENWIFI_DTS_FILENAME
+	string "DTS filename without .dts"
+	depends on PACKAGE_kmod-openwifi && !OPENWIFI_DEFAULT_DTS
+	default "devicetree"
+
+config OPENWIFI_DTS_FOLDER
+	string "Enter DTS path"
+	depends on PACKAGE_kmod-openwifi && !OPENWIFI_DEFAULT_DTS
+	default "."
+
+config OPENWIFI_DEFAULT_BITSTREAM
+	bool "Let OpenWiFi choose the bitstream"
+	depends on PACKAGE_kmod-openwifi
+	default y
+
+config OPENWIFI_BITSTREAM_FILE
+	string "Path to bitstream"
+	depends on PACKAGE_kmod-openwifi && !OPENWIFI_DEFAULT_BITSTREAM
+	default "bitstreams/system_top.bit"

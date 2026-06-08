@@ -16,9 +16,6 @@ OPENWIFI_BRANCH:=nlnet
 OPENWIFI_REVISION:=d1ecd9bf # Latest known working commit (must be length eight)
 OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
 
-# Link to the repository that hosts all board bitstreams
-OPENWIFI_HW_REVISION:=91c68d6
-OPENWIFI_HW_GITHUB_REPO:=https://github.com/open-sdr/openwifi-hw-img.git
 
 OPENWIFI_DIR:=$(PKG_BUILD_DIR)/$(PKG_NAME)
 
@@ -56,7 +53,10 @@ define KernelPackage/openwifi
 		+webfsd \
 		+uboot-envtools \
 		+libnl \
-		+libpcap
+		+libpcap \
+		+openwifi-hw-img \
+		+sudo \
+		+bash
 	FILES:=\
 		$(DRIVER_DIR)/openofdm_tx/openofdm_tx.ko \
 		$(DRIVER_DIR)/openofdm_rx/openofdm_rx.ko \
@@ -95,44 +95,7 @@ define KernelPackage/openwifi/config
 	select HAS_OVERLAYS_BOOTFS
 	select ZYNQ_BITSTREAM_BOOTFS
 	select ZYNQMP_BITSTREAM_BOOTFS
-	if PACKAGE_kmod-openwifi
-		menu "OpenWiFi user space programs"
-			config PACKAGE_side_ch_ctl
-				bool "side_ch_ctl tool for OpenWiFi"
-				default y
-			config PACKAGE_inject_80211
-				bool "inject_80211 tool for OpenWiFi"
-				default y
-			config PACKAGE_sdrctl
-				bool "sdrctl tool for OpenWiFi"
-				default y
-		endmenu
-
-		config PACKAGE_luci
-			bool "(recommended) Use LuCi web interface"
-			default y
-
-		config OPENWIFI_DEFAULT_DTS
-			bool "Let OpenWiFi choose the DTS file"
-			default y
-		if !OPENWIFI_DEFAULT_DTS
-			config OPENWIFI_DTS_FILENAME
-				string "DTS filename without .dts"
-				default "devicetree"
-			config OPENWIFI_DTS_FOLDER
-				string "Enter DTS path"
-				default "."
-		endif
-
-		config OPENWIFI_DEFAULT_BITSTREAM
-			bool "Let OpenWiFi choose the bitstream"
-			default y
-		if !OPENWIFI_DEFAULT_BITSTREAM
-			config OPENWIFI_BITSTREAM_FILE
-				string "Path to bitstream"
-				default "bitstreams/system_top.bit"
-		endif
-	endif
+	source "$(SOURCE)/Config.in"
 endef
 
 CT_MAKEDEFS:=
@@ -165,15 +128,6 @@ define Build/Prepare
 	git clone --branch $(OPENWIFI_BRANCH) $(OPENWIFI_GITHUB_REPO) $(PKG_NAME)
 	cd $(OPENWIFI_DIR) && \
 	git checkout $(OPENWIFI_REVISION)
-
-	# Clone the openwifi-hw-img repository to automatically provide all bitstreams
-	cd $(PKG_BUILD_DIR) && \
-	git clone $(OPENWIFI_HW_GITHUB_REPO) openwifi-hw-img
-	cd $(PKG_BUILD_DIR)/openwifi-hw-img && \
-	git checkout $(OPENWIFI_HW_REVISION)
-
-	# Unzip system_top.xsa
-	cd $(BOARD_DIR) && unzip -o $(XSA_PATH)
 
 	mkdir -p $(incl_fix_path)
 	touch $(DRIVER_DIR)/pre_def.h
@@ -240,47 +194,20 @@ define Build/Compile
 	)
 endef
 
-# Install the uEnv to auto load the bitstream + OS
-OPENWRT_BOARD_NAME:=$(lastword $(subst -, ,$(PROFILE)))
-# Mapping table
-OPENWIFI_BOARD_NAME_adrv9361 := adrv9361z7035
-OPENWIFI_BOARD_NAME_adrv9364 := adrv9364z7020
-OPENWIFI_BOARD_NAME_antsdre200 := antsdr_e200
-OPENWIFI_BOARD_NAME_antsdre310 := antsdr
-OPENWIFI_BOARD_NAME_antsdre310v2 := e310v2
-OPENWIFI_BOARD_NAME_zed := zed_fmcs2
-OPENWIFI_BOARD_NAME_zc702 := zc702_fmcs2
-OPENWIFI_BOARD_NAME_zc706 := zc706_fmcs2
-OPENWIFI_BOARD_NAME_sdrpi := sdrpi
-OPENWIFI_BOARD_NAME_neptunesdr := neptunesdr
-OPENWIFI_BOARD_NAME_zcu102 := zcu102_fmcs2
-OPENWIFI_BOARD_NAME_ := $(PROFILE)
-# Expand
-OPENWIFI_BOARD_NAME:= $(OPENWIFI_BOARD_NAME_$(OPENWRT_BOARD_NAME))
-
-BOARD_DIR:=$(PKG_BUILD_DIR)/openwifi-hw-img/boards/$(OPENWIFI_BOARD_NAME)/sdk
-XSA_PATH:=$(BOARD_DIR)/system_top.xsa
-BITSTREAM_PATH:=$(BOARD_DIR)/system_top.bit
-ifdef !CONFIG_OPENWIFI_DEFAULT_BITSTREAM
-	BITSTREAM_PATH:=OPENWIFI_BITSTREAM_FILE
-endif
-
 # Generate overlays, as we do not require the full device tree, only board name required
 define Build/GenerateOverlays
 	cd $(DT_DIR) && \
-	./construct_device_tree.sh $(OPENWIFI_BOARD_NAME) $(if $(filter zcu102,$(OPENWRT_BOARD_NAME)),64,32)
+	./construct_device_tree.sh $(CONFIG_OPENWIFI_BOARD_NAME) $(if $(findstring zcu102,$(CONFIG_OPENWIFI_BOARD_NAME)),64,32)
 endef
 
 # Copy openwifi bitstream to staging dir
 # Modify bootcmd to openwifi its will
 BUILD_DEVICE:=$(subst DEVICE_,,$(PROFILE))
 define Build/InstallDev
-	$(CP) -f $(BITSTREAM_PATH) $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-system_top.bit
-
 	mkdir -p $(STAGING_DIR_IMAGE)/overlays
 	$(call Build/GenerateOverlays)
 	$(CP) $(DT_DIR)/openwifi.dtbo $(STAGING_DIR_IMAGE)/overlays/openwifi.dtbo
-	$(CP) $(DT_DIR)/$(OPENWIFI_BOARD_NAME)/$(OPENWIFI_BOARD_NAME).dtbo $(STAGING_DIR_IMAGE)/overlays/openwifi_board.dtbo
+	$(CP) $(DT_DIR)/$(CONFIG_OPENWIFI_BOARD_NAME)/$(CONFIG_OPENWIFI_BOARD_NAME).dtbo $(STAGING_DIR_IMAGE)/overlays/openwifi_board.dtbo
 
 	if [ ! -f $(STAGING_DIR_IMAGE)/.patched_bootcmd ]; then \
 	tac $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd | sed '0,/boot/s/boot//' | tac > tmpfile && mv tmpfile $(STAGING_DIR_IMAGE)/$(BUILD_DEVICE)-boot.cmd \
@@ -305,10 +232,6 @@ define KernelPackage/openwifi/install
 
 	$(INSTALL_DIR) $(1)/etc/board.d
 	$(INSTALL_DATA) ./files/openwifi_board $(1)/etc/board.d/01_openwifi
-
-#	FPGA loading from Linux userspace not yet supported, requires Xilinx kernel (or preferred method is patch for OpenWrt)
-#	$(INSTALL_DIR) $(1)/lib/firmware
-#	$(INSTALL_DATA) $(BITSTREAM_PATH) $(1)/lib/firmware/openwifi_bitstream.bit
 endef
 
 define Package/sdrctl/install

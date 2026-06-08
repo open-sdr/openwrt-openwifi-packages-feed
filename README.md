@@ -11,3 +11,4 @@ This repository contains a set of packages to enable openwifi support in openwrt
 | kernel/xilinx-vdma | KernelPackage for xilinx-vdma                                          |
 | tools/microblaze_binutils | Compile binutils for microblaze, used by xlnx_soc-prebuild-firmware    |
 | web/webfsd | Package for webfsd, webserver used by openwifi                         |
+| firmware/openwifi-hw-img | Openwifi hardware components |
