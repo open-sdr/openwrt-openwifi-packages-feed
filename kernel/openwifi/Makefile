@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
 OPENWIFI_BRANCH:=nlnet
-OPENWIFI_REVISION:=d1ecd9bf # Latest known working commit (must be length eight)
+OPENWIFI_REVISION:=f3dda0e3 # Latest known working commit (must be length eight)
 OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
 
 
