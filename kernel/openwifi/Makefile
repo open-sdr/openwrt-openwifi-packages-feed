@@ -12,9 +12,9 @@ PKG_BUILD_PARALLEL:=1
 include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
-OPENWIFI_BRANCH:=nlnet
-OPENWIFI_REVISION:=f3dda0e3 # Latest known working commit (must be length eight)
-OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
+OPENWIFI_BRANCH:=master
+OPENWIFI_REVISION:=85b75924 # Latest known working commit (must be length eight)
+OPENWIFI_GITHUB_REPO:= https://github.com/open-sdr/openwifi.git
 
 
 OPENWIFI_DIR:=$(PKG_BUILD_DIR)/$(PKG_NAME)
