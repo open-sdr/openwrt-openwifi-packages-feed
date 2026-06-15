@@ -12,9 +12,9 @@ PKG_BUILD_PARALLEL:=1
 include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
-OPENWIFI_BRANCH:=nlnet
-OPENWIFI_REVISION:=f3dda0e3 # Latest known working commit (must be length eight)
-OPENWIFI_GITHUB_REPO:= https://github.com/robgar2001/openwifi.git
+OPENWIFI_BRANCH:=master
+OPENWIFI_REVISION:=85b75924 # Latest known working commit (must be length eight)
+OPENWIFI_GITHUB_REPO:= https://github.com/open-sdr/openwifi.git
 
 
 OPENWIFI_DIR:=$(PKG_BUILD_DIR)/$(PKG_NAME)
@@ -56,7 +56,8 @@ define KernelPackage/openwifi
 		+libpcap \
 		+openwifi-hw-img \
 		+sudo \
-		+bash
+		+bash \
+		+dnsmasq
 	FILES:=\
 		$(DRIVER_DIR)/openofdm_tx/openofdm_tx.ko \
 		$(DRIVER_DIR)/openofdm_rx/openofdm_rx.ko \
@@ -229,9 +230,10 @@ define KernelPackage/openwifi/install
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/openwifi_service $(1)/etc/init.d/openwifi
+	$(INSTALL_BIN) ./files/openwifi_post_service $(1)/etc/init.d/openwifi_post
 
-	$(INSTALL_DIR) $(1)/etc/board.d
-	$(INSTALL_DATA) ./files/openwifi_board $(1)/etc/board.d/01_openwifi
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_DATA) ./files/openwifi_uci $(1)/etc/uci-defaults/99_openwifi
 endef
 
 define Package/sdrctl/install

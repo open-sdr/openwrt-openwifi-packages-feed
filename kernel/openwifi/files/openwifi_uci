@@ -1,0 +1,33 @@
+# Set board to .10.122 and host pc to .10.1, as openwifi expects it to be
+uci set network.lan.ipaddr='192.168.10.122'
+uci set network.lan.gateway='192.168.10.1'
+uci set network.lan.dns='8.8.8.8'
+uci set dhcp.lan=dhcp
+uci set dhcp.lan.interface='lan'
+uci set dhcp.lan.start='1'
+uci set dhcp.lan.limit='1'
+uci set dhcp.lan.leasetime='2m'
+uci add_list dhcp.lan.dhcp_option='3,192.168.10.1'
+
+# Add wlan network
+uci set network.wlan='interface'
+uci set network.wlan.proto='static'
+uci set network.wlan.ipaddr='192.168.13.1'
+uci set network.wlan.netmask='255.255.255.0'
+
+uci set dhcp.wlan=dhcp
+uci set dhcp.wlan.interface='wlan'
+uci set dhcp.wlan.start='2'
+uci set dhcp.wlan.limit='255'
+uci set dhcp.wlan.leasetime='12h'
+uci add_list dhcp.wlan.dhcp_option='3,192.168.13.1'
+
+# Add wlan to the lan firewall zone
+uci add_list firewall.@zone[0].network='wlan'
+uci set firewall.@zone[0].masq='1'
+
+uci commit network
+uci commit dhcp
+uci commit firewall
+
+exit 0
