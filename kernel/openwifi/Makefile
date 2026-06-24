@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
 OPENWIFI_BRANCH:=master
-OPENWIFI_REVISION:=85b75924 # Latest known working commit (must be length eight)
+OPENWIFI_REVISION:=3f26eb0e # Latest known working commit (must be length eight)
 OPENWIFI_GITHUB_REPO:= https://github.com/open-sdr/openwifi.git
 
 
