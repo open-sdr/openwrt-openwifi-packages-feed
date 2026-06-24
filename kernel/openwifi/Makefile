@@ -13,7 +13,7 @@ include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
 OPENWIFI_BRANCH:=master
-OPENWIFI_REVISION:=85b75924 # Latest known working commit (must be length eight)
+OPENWIFI_REVISION:=3f26eb0e # Latest known working commit (must be length eight)
 OPENWIFI_GITHUB_REPO:= https://github.com/open-sdr/openwifi.git
 
 
@@ -113,7 +113,8 @@ NOSTDINC_FLAGS := \
 	-include backport/autoconf.h \
 	-include backport/backport.h \
 	-include$(LINUX_DIR)/include/net/sock.h \
-	-DCPTCFG_NL80211_TESTMODE
+	-DCPTCFG_NL80211_TESTMODE \
+	-DOPENWRT
 
 ifdef CONFIG_PACKAGE_MAC80211_DEBUGFS
 	NOSTDINC_FLAGS += -DCPTCFG_MAC80211_DEBUGFS
@@ -150,7 +151,7 @@ KBUILD_EXTRA_SYMBOLS:= \
 
 FLAGS := \
 	KBUILD_EXTRA_SYMBOLS="$(KBUILD_EXTRA_SYMBOLS)" \
-	NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)"
+	NOSTDINC_FLAGS="$(NOSTDINC_FLAGS)" \
 
 define Build/Compile/sdr
 	+$(KERNEL_MAKE) $(CT_MAKEDEFS) $(PKG_JOBS) M="$(DRIVER_DIR)/openofdm_tx" $(FLAGS) modules
