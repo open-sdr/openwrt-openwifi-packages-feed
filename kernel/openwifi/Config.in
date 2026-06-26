@@ -9,8 +9,8 @@ config OPENWIFI_BOARD_NAME
 	default "antsdr_e200"   if TARGET_zynq_generic_DEVICE_microphase_zynq-antsdre200
 	default "antsdr"        if TARGET_zynq_generic_DEVICE_microphase_zynq-antsdre310
 	default "e310v2"        if TARGET_zynq_generic_DEVICE_microphase_zynq-antsdre310v2
-	default "sdrpi"         if TARGET_zynq_generic_DEVICE_hexsdr_sdrpi
-	default "neptunesdr"    if TARGET_zynq_generic_DEVICE_hamgeek_neptunesdr
+	default "sdrpi"         if TARGET_zynq_generic_DEVICE_hexsdr_zynq-sdrpi
+	default "neptunesdr"    if TARGET_zynq_generic_DEVICE_hamgeek_zynq-neptunesdr
 	default "zcu102_fmcs2"  if TARGET_zynqmp_generic_DEVICE_xlnx_zynqmp-zcu102
 	default ""
 
